@@ -1,0 +1,473 @@
+
+
+============
+Installation
+============
+use command
+
+  npm init playwright@latest
+
+answer questions
+
+
+-----------------------------------------------------------------------------------
+
+==== Running Tests ====
+
+  npx playwright test
+    Runs the end-to-end tests.
+
+  npx playwright test --project=chromium
+    Runs the tests only on Desktop Chrome.
+
+  npx playwright test example
+    Runs the tests in a specific file.
+
+  npx playwright test --debug
+    Runs the tests in debug mode.
+
+  npx playwright codegen
+    Auto generate tests with Codegen.
+
+We suggest that you begin by typing:
+
+    npx playwright test
+
+-----------------------------------------------------------------------------------
+
+==== Run Tests in Headed mode ====
+
+npx playwright test --Headed
+
+OR change config file
+
+use:{
+   headless: false,
+    viewport: { width: 1280, height: 720 },
+    ignoreHTTPSErrors: true,
+    video: 'on-first-retry',
+    }
+
+
+-----------------------------------------------------------------------------------
+
+==== RUNNING A SINGLE TEST ====
+
+to run a single test in test file you can add  .only 
+  
+    test.only(......)
+  
+  to the specific test in the file if you want to execute only that
+  test from the cmd
+
+  or you can use the command above with the specified test name
+
+   npx playwright test <exampleTestFile>
+
+
+=== DEBUG mode ===
+
+   npx playwright test <exampleTestName> --debug
+
+   note: debug mode does not include steps for playwright api
+   such as when you use an api to login. The debug inspector will
+   start after the api steps are completed
+
+=== DEBUG alternate method using VS Code
+
+in package.json
+in scripts place your command to run the specific test in the "test" property's value
+
+"scripts":{
+  "test": npx playwright test tests/<testName>.spec.js
+}
+
+this will allow you to debug code from the terminal
+
+press shift+ctrl+p 
+click on "Debug: Debug npm Script"
+
+make sure to put (VS Code) debug points in script
+
+
+==== RUN TESTS IN A FOLDER ====
+
+npx playwright test <folderContainingTests>
+
+-----------------------------------------------------------------------------------
+
+==== ENSURE MULTIPLE ACTIONS COMPLETE BEFORE NEXT STEP ====
+
+all the await methods return promises which are resolved before proceeding to the next step
+
+you can use promise.All([]) to provide a list of async awaits that must all be completed before
+going to the next step
+
+-----------------------------------------------------------------------------------
+
+==== RECORD AND PLAYBACK ====
+
+  npx playwright codegen <website url>
+
+-----------------------------------------------------------------------------------
+
+==== Generate Reports ====
+
+SCREENSHOT
+can capture a screenshot for every action with screenshot: 'on' if desired
+can capture stacktrace with trace: 'on' and corresponding screenshot for each step
+
+in config file
+
+  reporter: 'html',
+
+  use:{
+    screenshot: 'on',
+    trace: 'on'
+  }
+
+SCREENSHOT ON FAILURE ONLY
+
+  use:{
+    screenshot: 'only-on-failure',
+    trace: 'retain-on-failure'
+  }
+
+if reporter: 'html' in endabled then you will get a folder called test results after running tests
+
+To open last HTML report run:
+
+  npx playwright show-report
+
+
+
+------------------------------------------------------------------------------------------
+========================
+===== CONFIG NOTES =====
+========================
+
+tell playwright to use a different config file
+
+create another config file in root
+run command using name of custom config file
+
+npx playwright test tests/TestName.spec.js --playwright.customConfig1.js
+
+
+
+
+=== Projects ===
+array in config unter property name of projects
+by default Playwright will run all projects in the config file
+unless you specify a project to run
+
+projects: [
+  {
+    name: 'safari', 
+    use:{
+      browserName:'webkit',
+      headless:true,
+      screenshot:'on'
+      trace:'on'
+    }
+  },
+  {
+    name: 'chrome',
+    use:{
+    browserName:'chrome',
+    headless:false,
+    screenshot:'off'
+    trace:'on'
+    }
+  }
+]
+
+tell playwright which project you want executed
+
+npx playwright test tests/TestName.spec.js --playwright.config.js --project=safari
+
+
+=== VIEWPORT SIZE ===
+
+
+projects: [
+  {
+    name: 'chrome', 
+    use:{
+      browserName:'chrome',
+      headless:true,
+      screenshot:'on'
+      trace:'on',
+      viewport: {width:720, height:720}
+    }
+  }
+  ]
+
+
+
+=== DEVICE WINDOW SIZE ===
+autosize window based on specified devices
+
+projects: [
+  {
+    name: 'chrome', 
+    use:{
+      browserName:'chrome',
+      headless:true,
+      screenshot:'on'
+      trace:'on',
+      ...devices['iphone 11', 'iphone 4']
+    }
+  }
+  ]
+
+
+
+
+=== SSL CERTIFICATION ===
+
+this is the screen that says 
+YOUR CONNECTION IS NOT PRIVATE
+then asks you to click on "advanced" -> go to website anyway
+or "back to safety"
+
+ignoreHTTPSErrors: true
+
+playwright will proceed through it automatically
+projects: [
+  {
+    name: 'chrome', 
+    use:{
+      browserName:'chrome',
+      headless:true,
+      screenshot:'on'
+      trace:'on',
+      ignoreHTTPSErrors: true
+    }
+  }
+  ]
+
+
+
+
+  === LOCATION PERMISSION ===
+
+  When google asks to know your location with an alternate
+  adding permission will auto accept 
+
+  permissions:['geolocation']
+
+  projects: [
+  {
+    name: 'chrome', 
+    use:{
+      browserName:'chrome',
+      headless:true,
+      screenshot:'on'
+      trace:'on',
+      permissions:['geolocation']
+    }
+  }
+  ]
+
+
+
+=== VIDEO ===
+options: on, off, retain on failure, on-first-retry
+
+use:{
+  video: 'on-first-retry'
+}
+
+
+=== LOGS ===
+turn on trace
+
+
+=============================
+===== MORE CONFIG NOTES =====
+=============================
+
+=== Retrys to help with Flaky Tests ===
+
+collect tests that fail and retry those failed tests
+
+const config = {
+  testDir: './tests',
+
+  retries: 1,
+
+  timeout: 30 * 1000
+  expect:{
+    timeout: 5000
+  }
+
+  use:{}
+}
+
+make sure to specify project in cmd or it will run all the projects
+
+cmd
+  npx playwright test tests/TestName.spec.js --config playwright.config1.js --project=chrome
+
+
+
+
+
+=== Serial and Parallel Modes ===
+
+tests in a single file will run in series
+
+running tests in a folder will run in Parallel
+
+you can specify the number of "workers" executing in Parallel
+
+
+const config = {
+  testDir: './tests',
+  retries: 1,
+
+  workers: 3,
+
+  timeout: 30 * 1000
+  expect:{
+    timeout: 5000
+  }
+
+  use:{}
+}
+
+
+to run tests in a single file in parallel you can add test.describe.configure to the beggining of the test file
+
+test.describe.configure({mode:'parallel'});
+test("test1", async ({page})){}
+test("test2", async ({page})){}
+test("test3", async ({page})){}
+
+
+===== Tagging Tests and Running Tagged Tests =====
+
+example
+test("@MyTag1 this tests some thing", async ({page})){}
+
+the tag is @MyTag1
+
+npx playwright test --grep @MyTag1
+
+the tests with this tag will run in parallel and the report will contain only tests with this tag
+
+
+
+
+------------------------------------------------------------------------------------------
+
+
+=========================
+===== CI/CD JENKINS =====
+=========================
+
+----- Types of Reporters -----
+  html - default
+
+  line - prints reports in plain text line by line
+
+  allure - requires third party library, uses line reporting to genrate its report
+
+
+
+Set default reporter in config file
+
+const config = {
+  testDir: './tests',
+  retries: 1,
+  reporter: 'html'
+
+
+  use:{}
+}
+
+
+----- Generate HTML Reports -----
+
+located in directory playwright-report
+
+also look in zip file for trace
+
+
+got to 
+
+trace.playwright.dev 
+
+and drop in trace.zip file
+
+
+----- Allure Reporting -----
+third party plugin
+
+  npm i -D allure
+
+
+trigger test with allure as Reporting
+
+  npx playwright test --grep @TestTagName --reporter=line,allure-playwright
+
+after tests are run then use command to view
+
+  allure generate ./allure-results --clean
+
+find results in allure-results folder
+after generating reports you can open it later when you want with command
+
+open ./allure-report
+
+
+===== Custom Scripts to Trigger Tests =====
+
+in package.json
+
+  "scripts": {
+    "regression": "npx playwright test",
+    "webTests": "npx playwright test --grep @Web",
+    "APITests": "npx playwright test --grep @API"
+  },
+
+to run tests in another config file
+
+  "scripts": {
+    "regression": "npx playwright test",
+    "SafariNewConfig": "npx playwright test --config playwright config1.js --project=chrome"
+  },
+
+
+to run tests use cmd
+
+npm run webTests
+
+
+
+===== INSTALL JENKINS =====
+
+https://www.digitalocean.com/community/tutorials/how-to-install-jenkins-on-ubuntu-22-04
+
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+username = admin
+password = password
+name = admin
+email = admin@admin.com
+
+
+===== Create Jenkins Job =====
+
+
+
+
+
+
+
+
+
+
+
+
